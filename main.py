@@ -2,6 +2,7 @@ import tkinter
 import pyperclip
 import random
 from tkinter import messagebox
+import json
 
 
 def passwordgen():
@@ -19,12 +20,35 @@ def passwordgen():
     pyperclip.copy(new_word)
 
 def addcomand():
-    with open("myfile.txt", mode="a") as file:
-        line=entrynamesite.get()+"  |  "+entrymailorname.get()+"  |  "+entrypassword.get()+"\n"
-        file.write(line)
-        messagebox.showinfo(title="Инфо", message="данные сохранены")
-        pyperclip.copy(entrypassword.get())
+    try:
+        with open("myjson.json",mode="r") as file:
+            mydict = json.load(file)
+    except FileNotFoundError:
+        with open("myjson.json",mode="w") as file:
+            mydict={entrynamesite.get():{"mail":entrymailorname.get(),"passw":entrypassword.get()}}
+            json.dump(mydict,file)
+    else:
+        mydict[entrynamesite.get()] = {"mail": entrymailorname.get(), "passw": entrypassword.get()}
+        with open("myjson.json", mode="w") as file2:
+            json.dump(mydict,file2)
 
+    messagebox.showinfo(title="Инфо", message="данные сохранены")
+    pyperclip.copy(entrypassword.get())
+
+def searchcommand():
+    try:
+        with open("myjson.json", mode="r") as file:
+            mydict=json.load(file)
+    except FileNotFoundError:
+        messagebox.showerror("Нет файла","Файл на пк не создан")
+    else:
+        if entrynamesite.get() in mydict:
+            entrymailorname.delete(0,999)
+            entrymailorname.insert(0,mydict[entrynamesite.get()]["mail"])
+            entrypassword.delete(0,999)
+            entrypassword.insert(0,mydict[entrynamesite.get()]["passw"])
+        else:
+            messagebox.showerror("Нет записи", "Нет ни одной записи для поиска")
 
 
 window = tkinter.Tk()
@@ -41,14 +65,15 @@ canvas.grid(row=0,column=1,pady=15)
 labelnamesite=tkinter.Label(text="Название сайта:")
 labelnamesite.grid(row=1,column=0)
 
-entrynamesite=tkinter.Entry(width=50)
-entrynamesite.grid(row=1,column=1,columnspan=2)
+entrynamesite=tkinter.Entry(width=35)
+entrynamesite.grid(row=1,column=1)
 
 labelmailorname=tkinter.Label(text="Имя пользователя/или е-майл:")
 labelmailorname.grid(row=2,column=0,padx=20,pady=5)
 
 entrymailorname=tkinter.Entry(width=50)
-entrymailorname.grid(row=2,column=1,columnspan=2)
+entrymailorname.grid(row=2,column=1,columnspan=2,sticky="w")
+entrymailorname.insert(0,"mail@mail.ru")
 
 labelpassword=tkinter.Label(text="Password")
 labelpassword.grid(row=3,column=0)
@@ -61,6 +86,9 @@ battungenerate.grid(row=3,column=2,sticky="E")
 
 battunadd=tkinter.Button(text="Add",width=40,command=addcomand)
 battunadd.grid(row=4,columnspan=3,pady=7)
+
+battunsearch=tkinter.Button(text="Search",width=11,command=searchcommand)
+battunsearch.grid(row=1,column=2,sticky="E")
 
 
 
